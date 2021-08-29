@@ -1,5 +1,6 @@
 import Vue from 'vue';
-import Vuex from 'vuex';
+// import Vuex from 'vuex';
+import Vuex from '@/vuex';
 // 1.Vue.use(Vuex);  Vuex是一个对象 install方法
 // 2.Vuex中有一个Store类 
 // 3.混入到组件中 增添store属性

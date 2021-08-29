@@ -7,3 +7,11 @@
     <button @click="$store.dispatch('changeNum',-5)">异步更新：数量-5</button>
   </div>
 </template>
+
+<script>
+export default {
+  mounted(){
+    console.log(this.$store);
+  }
+}
+</script>

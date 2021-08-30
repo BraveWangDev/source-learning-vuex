@@ -2,6 +2,8 @@
 
 ## 目录
 ### v1.0,Vuex 的基本使用
+### v2.0,vuex 插件安装 install 逻辑
+### v3.0,State 状态的实现
 ## Project setup
 ```
 yarn install

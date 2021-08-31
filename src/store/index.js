@@ -17,6 +17,7 @@ const store = new Vuex.Store({
   // getters 相当于计算属性（内部实现利用了计算属性）
   getters: {
     getPrice(state) {
+      console.log("进入 getters - getPrice")
       return state.num * 10
     }
   },

@@ -23,14 +23,15 @@ const store = new Vuex.Store({
   },
   // 相当于 method，能够同步的更改 state
   mutations: {
-    // 更新 num
     changeNum(state, payload) {
+      console.log(`进入 mutations-changeNum：state = ${JSON.stringify(state)}, payload = ${payload}`)
       state.num += payload;
     }
   },
   // action作用:执行异步操作，并将结果提交给 mutations
   actions: {
     changeNum({ commit }, payload) {
+      console.log(`进入 actions-changeNum：commit = ${JSON.stringify(commit)}, payload = ${payload}`)
       setTimeout(() => { // 模拟异步
         commit('changeNum', payload)
       }, 1000);

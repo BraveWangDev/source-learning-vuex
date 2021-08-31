@@ -5,6 +5,7 @@
 ### v2.0,vuex 插件安装 install 逻辑
 ### v3.0,State 状态的实现
 ### v4.0,Getter 的实现
+### v5.0,Mutations 和 Actions 的实现
 ## Project setup
 ```
 yarn install

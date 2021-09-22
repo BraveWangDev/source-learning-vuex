@@ -5,6 +5,10 @@ import Vuex from '@/vuex';
 // 2.Vuex中有一个Store类 
 // 3.混入到组件中 增添store属性
 
+// 引入测试模块
+import moduleA from './moduleA'
+import moduleB from './moduleB'
+
 // 注册 vuex 插件：内部会调用 Vuex 中的 install 方法
 Vue.use(Vuex);
 
@@ -36,6 +40,10 @@ const store = new Vuex.Store({
         commit('changeNum', payload)
       }, 1000);
     }
+  },
+  modules: {
+    moduleA,
+    moduleB
   }
 });
 export default store; // 导出 store 实例，传入根组件

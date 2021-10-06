@@ -1,3 +1,6 @@
+import { forEachValue } from "../utils";
+import Module from "./module";
+
 /**
  * 模块收集操作
  *  处理用户传入的 options 选项
@@ -16,11 +19,13 @@ class ModuleCollection {
    */
   register(path, rootModule) {
     // 格式化:构建 Module 对象
-    let newModule = {
-      _raw: rootModule,        // 当前模块的完整对象
-      _children: {},           // 当前模块的子模块
-      state: rootModule.state  // 当前模块的状态
-    }
+    // 通过类的方式产生实例，便于后续的扩展
+    let newModule = new Module(rootModule);
+    // let newModule = {
+    //   _raw: rootModule,        // 当前模块的完整对象
+    //   _children: {},           // 当前模块的子模块
+    //   state: rootModule.state  // 当前模块的状态
+    // } 
 
     // 根模块时:创建模块树的根对象
     if (path.length == 0) {
@@ -30,22 +35,27 @@ class ModuleCollection {
       // 逐层找到当前模块的父亲（例如:path = [a,b,c,d]）
       let parent = path.slice(0, -1).reduce((memo, current) => {
         //从根模块中找到a模块;从a模块中找到b模块;从b模块中找到c模块;结束返回c模块即为d模块的父亲
-        return memo._children[current];
+        return memo.getChild(current);
+        // return memo._children[current];
       }, this.root)
       // 将d模块注册到c模块上
-      parent._children[path[path.length - 1]] = newModule
+      // parent._children[path[path.length - 1]] = newModule
+      parent.addChild(path[path.length - 1], newModule);
     }
 
     // 若当前模块存在子模块,继续注册子模块
     if (rootModule.modules) {
       // 采用深度递归方式处理子模块
-      Object.keys(rootModule.modules).forEach(moduleName => {
-        let module = rootModule.modules[moduleName];
+      forEachValue(rootModule.modules,(module,moduleName)=>{
         // 将子模块注册到对应的父模块上
         // 1,path:待注册子模块的完整路径,当前父模块path拼接子模块名moduleName
         // 2,module:当前待注册子模块对象
-        this.register(path.concat(moduleName), module)
-      });
+        this.register(path.concat(moduleName),module)
+      })
+      // Object.keys(rootModule.modules).forEach(moduleName => {
+      //   let module = rootModule.modules[moduleName];
+      //   this.register(path.concat(moduleName), module)
+      // });
     }
   }
 }

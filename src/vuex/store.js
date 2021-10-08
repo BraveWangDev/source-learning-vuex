@@ -12,6 +12,16 @@ export let Vue;
  */
 const installModule = (store, rootState, path, module) => {
 
+  // 处理子模块：将子模块上的状态，添加到对应父模块的状态中；
+  if (path.length > 0) {
+    // 从根状态开始逐层差找，找到当前子模块对应的父模块状态
+    let parent = path.slice(0, -1).reduce((memo, current) => {
+      return memo[current]
+    }, rootState)
+    // 支持 Vuex 动态添加模块，将新增状态直接定义成为响应式数据；
+    Vue.set(parent, path[path.length - 1], module.state);
+  }
+
   // 遍历当前模块中的 actions、mutations、getters 
   // 将它们分别定义到 store 中的 _actions、_mutations、_wrappedGetters;
 
@@ -49,6 +59,36 @@ const installModule = (store, rootState, path, module) => {
   // 至此，将模块树中所有的 actions、mutations、getters 都放到了 store 中的_actions、_mutations、_wrappedGetters
 }
 
+/**
+ * 重置 Store 容器对象的 vm 实例
+ * @param {*} store store实例，包含 _wrappedGetters 即全部的 getter 方法；
+ * @param {*} state 根状态，在状态安装完成后包含全部模块状态；
+ */
+// function resetStoreVM(store, state) {
+//   const computed = {}; // 定义 computed 计算属性
+//   store.getters = {};  // 定义 store 容器实例中的 getters
+//   // 遍历 _wrappedGetters 构建 computed 对象并进行数据代理
+//   forEachValue(store._wrappedGetters, (fn, key) => {
+//     // 构建 computed 对象，后面借助 Vue 计算属性实现数据缓存
+//     computed[key] = () => {
+//       return fn();
+//     }
+//     // 数据代理：将 getter 的取值代理到 vm 实例上，到计算数据取值
+//     Object.defineProperty(store.getters, key, {
+//       get: () => store._vm[key]
+//     });
+//   })
+//   // 使用 state 根状态 和 computed 创建 vm 实例，成为响应式数据
+//   store._vm = new Vue({
+//     // 借助 data 使根状态 state 成为响应式数据
+//     data: {
+//       $$state: state
+//     },
+//     // 借助 computed 计算属性实现数据缓存
+//     computed 
+//   });
+// }
+
 // 容器的初始化
 export class Store {
   constructor(options) {
@@ -68,6 +108,11 @@ export class Store {
     console.log("模块安装结果:_mutations", this._mutations)
     console.log("模块安装结果:_actions", this._actions)
     console.log("模块安装结果:_wrappedGetters", this._wrappedGetters)
+    console.log("模块安装结果:state", state)
+
+
+    // // 3,将 state 状态、getters 定义在当前的 vm 实例上
+    // resetStoreVM(this, state);
   }
 
   /**

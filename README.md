@@ -8,6 +8,7 @@
 ### v5.0,Mutations 和 Actions 的实现
 ### v6.0,Vuex 模块收集的实现
 ### v7.0,Vuex 的模块安装
+### v8.0,Vuex 的 State 状态安装
 ## Project setup
 ```
 yarn install

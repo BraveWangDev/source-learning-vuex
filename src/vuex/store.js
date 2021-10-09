@@ -1,4 +1,5 @@
 import applyMixin from "./mixin";
+import { forEachValue } from './utils';
 import ModuleCollection from "./module/module-collection";
 // 导出传入的 Vue 的构造函数，供插件内部的其他文件使用
 export let Vue;
@@ -64,30 +65,30 @@ const installModule = (store, rootState, path, module) => {
  * @param {*} store store实例，包含 _wrappedGetters 即全部的 getter 方法；
  * @param {*} state 根状态，在状态安装完成后包含全部模块状态；
  */
-// function resetStoreVM(store, state) {
-//   const computed = {}; // 定义 computed 计算属性
-//   store.getters = {};  // 定义 store 容器实例中的 getters
-//   // 遍历 _wrappedGetters 构建 computed 对象并进行数据代理
-//   forEachValue(store._wrappedGetters, (fn, key) => {
-//     // 构建 computed 对象，后面借助 Vue 计算属性实现数据缓存
-//     computed[key] = () => {
-//       return fn();
-//     }
-//     // 数据代理：将 getter 的取值代理到 vm 实例上，到计算数据取值
-//     Object.defineProperty(store.getters, key, {
-//       get: () => store._vm[key]
-//     });
-//   })
-//   // 使用 state 根状态 和 computed 创建 vm 实例，成为响应式数据
-//   store._vm = new Vue({
-//     // 借助 data 使根状态 state 成为响应式数据
-//     data: {
-//       $$state: state
-//     },
-//     // 借助 computed 计算属性实现数据缓存
-//     computed 
-//   });
-// }
+function resetStoreVM(store, state) {
+  const computed = {}; // 定义 computed 计算属性
+  store.getters = {};  // 定义 store 容器实例中的 getters
+  // 遍历 _wrappedGetters 构建 computed 对象并进行数据代理
+  forEachValue(store._wrappedGetters, (fn, key) => {
+    // 构建 computed 对象，后面借助 Vue 计算属性实现数据缓存
+    computed[key] = () => {
+      return fn();
+    }
+    // 数据代理：将 getter 的取值代理到 vm 实例上，到计算数据取值
+    Object.defineProperty(store.getters, key, {
+      get: () => store._vm[key]
+    });
+  })
+  // 使用 state 根状态 和 computed 创建 vm 实例，成为响应式数据
+  store._vm = new Vue({
+    // 借助 data 使根状态 state 成为响应式数据
+    data: {
+      $$state: state
+    },
+    // 借助 computed 计算属性实现数据缓存
+    computed 
+  });
+}
 
 // 容器的初始化
 export class Store {
@@ -111,8 +112,8 @@ export class Store {
     console.log("模块安装结果:state", state)
 
 
-    // // 3,将 state 状态、getters 定义在当前的 vm 实例上
-    // resetStoreVM(this, state);
+    // 3,将 state 状态、getters 定义在当前的 vm 实例上
+    resetStoreVM(this, state);
   }
 
   /**
@@ -124,8 +125,12 @@ export class Store {
    * @param {*} payload 载荷：值或对象
    */
   commit = (type, payload) => {
-    // 执行 mutations 对象中对应的方法，并传入 payload 执行
-    this.mutations[type](payload)
+    // 旧：执行 mutations 对象中对应的方法，并传入 payload 执行
+    // this.mutations[type](payload)
+    // 新：不再去 mutations 对象中查找，直接在 _mutations 中找到 type 对应的数组，依次执行
+    console.log(this._mutations)
+    console.log(type)
+    this._mutations[type].forEach(mutation=>mutation.call(this, payload))
   }
 
   /**
@@ -137,8 +142,10 @@ export class Store {
    * @param {*} payload 载荷：值或对象
    */
   dispatch = (type, payload) => {
-    // 执行 actions 对象中对应的方法，并传入 payload 执行
-    this.actions[type](payload)
+    // 旧：执行 actions 对象中对应的方法，并传入 payload 执行
+    // this.actions[type](payload)
+    // 新：不再去 actions 对象中查找，直接在 _actions 中找到 type 对应的数组，依次执行
+    this._actions[type].forEach(action=>action.call(this, payload))
   }
 
   get state() { // 对外提供属性访问器：当访问state时，实际是访问 _vm._data.$$state

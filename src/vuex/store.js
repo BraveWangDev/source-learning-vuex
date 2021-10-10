@@ -13,6 +13,10 @@ export let Vue;
  */
 const installModule = (store, rootState, path, module) => {
 
+  // 根据当前模块的 path 路径，拼接当前模块的命名空间标识
+  let namespace = store._modules.getNamespaced(path);
+  console.log(namespace)
+
   // 处理子模块：将子模块上的状态，添加到对应父模块的状态中；
   if (path.length > 0) {
     // 从根状态开始逐层差找，找到当前子模块对应的父模块状态
@@ -29,24 +33,24 @@ const installModule = (store, rootState, path, module) => {
   // 遍历 mutation
   module.forEachMutation((mutation, key) => {
     // 处理成为数组类型：每个 key 可能会存在多个需要被处理的函数
-    store._mutations[key] = (store._mutations[key] || []);
+    store._mutations[namespace + key] = (store._mutations[namespace + key] || []);
     // 向 _mutations 对应 key 的数组中，放入对应的处理函数
-    store._mutations[key].push((payload) => {
+    store._mutations[namespace + key].push((payload) => {
       // 执行 mutation，传入当前模块的 state 状态
       mutation.call(store, module.state, payload);
     })
   })
   // 遍历 action
   module.forEachAction((action, key) => {
-    store._actions[key] = (store._actions[key] || []);
-    store._actions[key].push((payload) => {
+    store._actions[namespace + key] = (store._actions[namespace + key] || []);
+    store._actions[namespace + key].push((payload) => {
       action.call(store, store, payload);
     })
   })
   // 遍历 getter
   module.forEachGetter((getter, key) => {
     // 注意：getter 重名将会被覆盖
-    store._wrappedGetters[key] = function () {
+    store._wrappedGetters[namespace + key] = function () {
       // 执行对应的 getter 方法，传入当前模块的 state 状态，返回执行结果
       return getter(module.state);
     }
@@ -110,7 +114,6 @@ export class Store {
     console.log("模块安装结果:_actions", this._actions)
     console.log("模块安装结果:_wrappedGetters", this._wrappedGetters)
     console.log("模块安装结果:state", state)
-
 
     // 3,将 state 状态、getters 定义在当前的 vm 实例上
     resetStoreVM(this, state);

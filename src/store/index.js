@@ -1,6 +1,6 @@
 import Vue from 'vue';
-// import Vuex from 'vuex';
-import Vuex from '@/vuex';
+import Vuex from 'vuex';
+// import Vuex from '@/vuex';
 // 1.Vue.use(Vuex);  Vuex是一个对象 install方法
 // 2.Vuex中有一个Store类 
 // 3.混入到组件中 增添store属性
@@ -21,21 +21,21 @@ const store = new Vuex.Store({
   // getters 相当于计算属性（内部实现利用了计算属性）
   getters: {
     getPrice(state) {
-      console.log("进入 getters - getPrice")
+      // console.log("进入 getters - getPrice")
       return state.num * 10
     }
   },
   // 相当于 method，能够同步的更改 state
   mutations: {
     changeNum(state, payload) {
-      console.log(`进入 mutations-changeNum：state = ${JSON.stringify(state)}, payload = ${payload}`)
+      // console.log(`进入 mutations-changeNum：state = ${JSON.stringify(state)}, payload = ${payload}`)
       state.num += payload;
     }
   },
   // action作用:执行异步操作，并将结果提交给 mutations
   actions: {
     changeNum({ commit }, payload) {
-      console.log(`进入 actions-changeNum：commit = ${JSON.stringify(commit)}, payload = ${payload}`)
+      // console.log(`进入 actions-changeNum：commit = ${JSON.stringify(commit)}, payload = ${payload}`)
       setTimeout(() => { // 模拟异步
         commit('changeNum', payload)
       }, 1000);

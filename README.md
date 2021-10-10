@@ -10,6 +10,7 @@
 ### v7.0,Vuex 的模块安装
 ### v8.0,Vuex 的 State 状态安装
 ### v9.0,Vuex 响应式数据和缓存的实现
+### v10.0,Vuex 命名空间的实现
 ## Project setup
 ```
 yarn install

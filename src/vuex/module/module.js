@@ -4,6 +4,11 @@ import { forEachValue } from "../utils";
  * Module 模块类，提供模块数据结构与相关能力扩展
  */
 class Module {
+
+  // 属性访问器，获取 namespaced
+  get namespaced(){
+    return !!this._raw.namespaced;  // !!强转为 boolean
+  }
   constructor(newModule) {
     this._raw = newModule;
     this._children = {};

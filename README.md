@@ -11,6 +11,7 @@
 ### v8.0,Vuex 的 State 状态安装
 ### v9.0,Vuex 响应式数据和缓存的实现
 ### v10.0,Vuex 命名空间的实现
+### v11.0,Vuex 插件开发与 Vuex 插件机制实现
 ## Project setup
 ```
 yarn install

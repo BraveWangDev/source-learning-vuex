@@ -4,6 +4,13 @@ import ModuleCollection from "./module/module-collection";
 // 导出传入的 Vue 的构造函数，供插件内部的其他文件使用
 export let Vue;
 
+// 通过当前模块路径 path，从最新的根状态上，获取模块的最新状态
+function getState(store, path){
+  return path.reduce((newState,current)=>{
+     return newState[current];
+  }, store.state);  // replaceState 后的最新状态
+}
+
 /**
  * 安装模块
  * @param {*} store       容器
@@ -36,8 +43,19 @@ const installModule = (store, rootState, path, module) => {
     store._mutations[namespace + key] = (store._mutations[namespace + key] || []);
     // 向 _mutations 对应 key 的数组中，放入对应的处理函数
     store._mutations[namespace + key].push((payload) => {
-      // 执行 mutation，传入当前模块的 state 状态
-      mutation.call(store, module.state, payload);
+      // 旧：执行 mutation，传入当前模块的 state 状态
+      // mutation.call(store, module.state, payload);
+      // 新：Vuex 持久化需要使用最新的状态，而 module.state是老状态
+      // 需要通过当前路径 path，获取到当前最新的状态
+      mutation.call(store, getState(store,path), payload);
+      // 当 mutation 执行时，依次执行 store.subscribe 状态变更事件订阅的处理函数 fn
+      store._subscribes.forEach(fn => {
+        console.log("状态更新，依次执行订阅处理")
+        // 旧逻辑:使用根状态 rootState
+        // fn(mutation, rootState);
+        // 新逻辑:使用新状态 store.state
+        fn(mutation, store.state);
+      })
     })
   })
   // 遍历 action
@@ -51,8 +69,11 @@ const installModule = (store, rootState, path, module) => {
   module.forEachGetter((getter, key) => {
     // 注意：getter 重名将会被覆盖
     store._wrappedGetters[namespace + key] = function () {
-      // 执行对应的 getter 方法，传入当前模块的 state 状态，返回执行结果
-      return getter(module.state);
+      // 旧逻辑：执行对应的 getter 方法，传入当前模块的 state 状态，返回执行结果
+      // return getter(module.state);
+      // 新逻辑：使用最新的状态进行处理
+      return getter(getState(store,path));
+      
     }
   })
   // 遍历当前模块的儿子
@@ -90,7 +111,7 @@ function resetStoreVM(store, state) {
       $$state: state
     },
     // 借助 computed 计算属性实现数据缓存
-    computed 
+    computed
   });
 }
 
@@ -104,11 +125,16 @@ export class Store {
     this._mutations = {};
     this._wrappedGetters = {};
 
+    // 收集通过 store.subcribe 订阅状态变更事件的处理函数 fn
+    // 当 mutation 执行时，触发全部订阅事件执行，返回当前 mutation 和更新后的状态
+    this._subscribes = [];
+
     // 1,模块收集：options 格式化 -> Vuex 模块树
     this._modules = new ModuleCollection(options);
     console.log("格式化后的模块树对象", this._modules)
 
     // 2,模块安装：
+    // 模块安装处理 mutation 时，触发状态变更订阅事件通知
     installModule(this, state, [], this._modules.root);
     console.log("模块安装结果:_mutations", this._mutations)
     console.log("模块安装结果:_actions", this._actions)
@@ -117,6 +143,22 @@ export class Store {
 
     // 3,将 state 状态、getters 定义在当前的 vm 实例上
     resetStoreVM(this, state);
+
+    // 依次执行 options 选项中的 plugins 插件,传入当前 store 实例
+    options.plugins.forEach(plugin => plugin(this));
+  }
+
+  // Vuex 状态替换
+  replaceState(state){
+    this._vm._data.$$state = state
+  }
+
+  // 提供 store.subscribe 状态变更事件订阅功能
+  // 将回调函数统计收集到 _subscribes 数组中；
+  subscribe(fn) {
+    console.log("订阅 Vuex 状态变化，收集处理函数")
+    this._subscribes.push(fn);
+    console.log("this._subscribes", this._subscribes)
   }
 
   /**
@@ -133,7 +175,7 @@ export class Store {
     // 新：不再去 mutations 对象中查找，直接在 _mutations 中找到 type 对应的数组，依次执行
     console.log(this._mutations)
     console.log(type)
-    this._mutations[type].forEach(mutation=>mutation.call(this, payload))
+    this._mutations[type].forEach(mutation => mutation.call(this, payload))
   }
 
   /**
@@ -148,7 +190,7 @@ export class Store {
     // 旧：执行 actions 对象中对应的方法，并传入 payload 执行
     // this.actions[type](payload)
     // 新：不再去 actions 对象中查找，直接在 _actions 中找到 type 对应的数组，依次执行
-    this._actions[type].forEach(action=>action.call(this, payload))
+    this._actions[type].forEach(action => action.call(this, payload))
   }
 
   get state() { // 对外提供属性访问器：当访问state时，实际是访问 _vm._data.$$state
